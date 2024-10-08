@@ -3,7 +3,7 @@ import openpyxl as ox
 import pandas as pd
 
 
-# データを読み込み、worksheet型と1次元dfのリストにする
+# データを読み込み、worksheet型と1次元dfのリストにする デッキリストだけは別でリストに
 
 def datastopy(path):
     import datetime
