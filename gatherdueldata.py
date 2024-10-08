@@ -149,7 +149,9 @@ st.set_page_config(
 dueldatas_master,datalist,deckdueled = datastopy("database_florting/dueldatas.xlsx")
 dueldatas = dueldatas_master["シート1"]
 
-reject = "ここに入力 元の文字は消さない"
+ #　表示の調整　重複するデッキをはじいている  
+deckdueled = set(deckdueled)
+deckdueled = list(deckdueled)
 
 
 if "decks" not in st.session_state:
@@ -170,14 +172,14 @@ if st.button("追加"):
         if newdeck == i:
             st.write("そのデッキは追加されています")
             apd = 1
+            break
     if apd == 0 and newdeck != "":
         deck_options.append(newdeck)
 
-
- #　表示の調整　重複するデッキをはじいている       
-deck_options = set(deck_options)
-deck_options = list(deck_options)
-deck_options.insert(0,reject)
+# 選択肢に実質的なプレイスホルダーを追加
+reject = "ここに入力 元の文字は消さない"
+if deck_options[0] != reject:
+    deck_options.insert(0,reject)
     
 deck = st.selectbox("対戦したデッキを選んでください 直打ちで検索もできます",deck_options)
 order = st.radio("先手後手を記入",("先手","後手"),horizontal=True)
