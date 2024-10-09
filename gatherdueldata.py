@@ -36,7 +36,7 @@ def datastopy(path):
         i += 1   
     return dueldatas_master,datas,decks
 
-def pytodatas(dueldatas_master,path,deck,order,result):
+def pytodatas(dueldatas_master,deck,order,result):
     import datetime
     dueldatas = dueldatas_master["シート1"]
     datefront = datetime.datetime.now()
@@ -134,7 +134,29 @@ def pytodatas(dueldatas_master,path,deck,order,result):
             dueldatas.cell(row=i,column=8,value=0)
             dueldatas.cell(row=i,column=9,value=1)            
         
-    dueldatas_master.save(path)  
+     
+
+def pytoadditionaldata(df,dueldatas):
+    for i in range(len(df)):
+        first = df.iloc[i]["先手"]
+        firstwin = df.iloc[i]["先手勝ち"]
+        second = df.iloc[i]["後手"]
+        secondwin = df.iloc[i]["後手勝ち"]
+        rate_firstwin = round(firstwin/first,3)
+        rate_secondwin = round(second/secondwin,3)
+        dueldatas.cell(row=i+7,column=10,value=rate_firstwin)
+        dueldatas.cell(row=i+7,column=11,value=rate_secondwin)
+
+def datas_init(dueldatas_master):
+    dueldatas = dueldatas_master["シート1"]
+    for row in dueldatas.iter_rows(min_row=7, min_col=1, max_row=600, max_col=11):
+        for cell in row:
+            cell.value = None
+
+    
+
+
+
        
 # ページレイアウト
 st.set_page_config(
@@ -191,12 +213,14 @@ if submit is True:
     if deck == reject:
         st.write("無効なデッキ名です")
     else:
-        pytodatas(dueldatas_master,"database_florting/dueldatas.xlsx",deck,order,result)
+        pytodatas(dueldatas_master,deck,order,result)
     
 if datalist == []:
     st.write("データがありません。")
 else:
     df = pd.concat(datalist)
+    pytoadditionaldata(df,dueldatas)
+    dueldatas_master.save("database_florting/dueldatas.xlsx") 
     st.write(df)
     
 
