@@ -177,7 +177,6 @@ dueldatas = dueldatas_master["シート1"]
 deckdueled = set(deckdueled)
 deckdueled = list(deckdueled)
 
-
 if "decks" not in st.session_state:
     st.session_state.decks = deckdueled
     
@@ -187,8 +186,8 @@ deck_options = st.session_state.decks
 # ここまでが読み込み　ここから動的な部分
 
 st.title("DC 戦績記入,分析ツール")
-# デッキ情報の取り出し　記入モジュール
 
+# デッキ情報の取り出し　記入モジュール
 newdeck = st.text_input("新しいデッキの追加")
 if st.button("追加"):
     apd = 0
@@ -219,7 +218,8 @@ if submit is True:
         st.write("無効なデッキ名です")
     else:
         pytodatas(dueldatas_master,deck,order,result)
-        dueldatas_master.save("database_florting/dueldatas.xlsx") 
+        dueldatas_master.save("database_florting/dueldatas.xlsx")
+        st.button("データの同期") 
         
     
 if datalist == []:
@@ -229,6 +229,20 @@ else:
     pytoadditionaldata(df,dueldatas)
     dueldatas_master.save("database_florting/dueldatas.xlsx")
     st.write(df)
+    st.button("勝率を計算")
+
+st.markdown("### 危険　全データの初期化")
+
+check = st.checkbox("初期化しますか？")
+check2 = st.checkbox("こうかいしませんね？")
+if st.button("このボタンでデータが初期化") and check and check2:
+    datas_init(dueldatas_master)
+    dueldatas_master.save("database_florting/dueldatas.xlsx")
+    st.write("データを初期化しました。　リロードすると反映されます")
+
+    
+   
+    
 
 
 
