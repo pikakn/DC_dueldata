@@ -144,11 +144,11 @@ def pytoadditionaldata(df,dueldatas):
         if first != 0:
             rate_firstwin = round(firstwin/first,3)
             dueldatas.cell(row=i+7,column=10,value=rate_firstwin)
-            df.iloc[i]["先手勝率"] = rate_firstwin
+            df.iat[i,8] = rate_firstwin
         if second != 0:    
             rate_secondwin = round(secondwin/second,3)
             dueldatas.cell(row=i+7,column=11,value=rate_secondwin)
-            df.iloc[i]["後手勝率"] = rate_secondwin
+            df.iat[i,9] = rate_secondwin
 
 def datas_init(dueldatas_master):
     dueldatas = dueldatas_master["シート1"]
@@ -282,7 +282,6 @@ else:
     pytoadditionaldata(df,dueldatas)
     dueldatas_master.save("database_florting/dueldatas.xlsx")
     st.write(df)
-    st.button("勝率を計算")
 
 st.markdown("#### 全体データ")
 dfad = advanceddata(df)
