@@ -142,10 +142,12 @@ def pytoadditionaldata(df,dueldatas):
         firstwin = df.iloc[i]["先手勝ち"]
         second = df.iloc[i]["後手"]
         secondwin = df.iloc[i]["後手勝ち"]
-        rate_firstwin = round(firstwin/first,3)
-        rate_secondwin = round(second/secondwin,3)
-        dueldatas.cell(row=i+7,column=10,value=rate_firstwin)
-        dueldatas.cell(row=i+7,column=11,value=rate_secondwin)
+        if first != 0:
+            rate_firstwin = round(firstwin/first,3)
+            dueldatas.cell(row=i+7,column=10,value=rate_firstwin)
+        if second != 0:    
+            rate_secondwin = round(secondwin/second,3)
+            dueldatas.cell(row=i+7,column=11,value=rate_secondwin)
 
 def datas_init(dueldatas_master):
     dueldatas = dueldatas_master["シート1"]
@@ -200,8 +202,11 @@ if st.button("追加"):
 
 # 選択肢に実質的なプレイスホルダーを追加
 reject = "ここに入力 元の文字は消さない"
-if deck_options[0] != reject:
-    deck_options.insert(0,reject)
+if deck_options == []:
+    deck_options.append(reject)
+else:
+    if deck_options[0] != reject:
+        deck_options.insert(0,reject)
     
 deck = st.selectbox("対戦したデッキを選んでください 直打ちで検索もできます",deck_options)
 order = st.radio("先手後手を記入",("先手","後手"),horizontal=True)
@@ -214,15 +219,18 @@ if submit is True:
         st.write("無効なデッキ名です")
     else:
         pytodatas(dueldatas_master,deck,order,result)
+        dueldatas_master.save("database_florting/dueldatas.xlsx") 
+        
     
 if datalist == []:
     st.write("データがありません。")
 else:
     df = pd.concat(datalist)
     pytoadditionaldata(df,dueldatas)
-    dueldatas_master.save("database_florting/dueldatas.xlsx") 
+    dueldatas_master.save("database_florting/dueldatas.xlsx")
     st.write(df)
-    
+
+
 
 
 
