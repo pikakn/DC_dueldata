@@ -1,12 +1,11 @@
 import streamlit as st
 import openpyxl as ox
 import pandas as pd
-
+import datetime
 
 # データを読み込み、worksheet型と1次元dfのリストにする デッキリストだけは別でリストに
 
 def datastopy(path):
-    import datetime
     dueldatas_master = ox.load_workbook(path)
     dueldatas = dueldatas_master["シート1"]
     datas = []
@@ -145,9 +144,11 @@ def pytoadditionaldata(df,dueldatas):
         if first != 0:
             rate_firstwin = round(firstwin/first,3)
             dueldatas.cell(row=i+7,column=10,value=rate_firstwin)
+            df.iloc[i]["先手勝率"] = rate_firstwin
         if second != 0:    
             rate_secondwin = round(secondwin/second,3)
             dueldatas.cell(row=i+7,column=11,value=rate_secondwin)
+            df.iloc[i]["後手勝率"] = rate_secondwin
 
 def datas_init(dueldatas_master):
     dueldatas = dueldatas_master["シート1"]
@@ -155,9 +156,47 @@ def datas_init(dueldatas_master):
         for cell in row:
             cell.value = None
 
-    
-
-
+def advanceddata(df):
+    import datetime
+    today = datetime.datetime.now()
+    today ="{}/{}/{}".format(today.year,today.month,today.day)
+    sumfirst = 0
+    sumfirstwin = 0
+    sumsecond = 0
+    sumsecondwin = 0
+    sumduel = 0
+    duelwin = 0
+    for i in range(len(df)):
+        addduelfirst = df.iloc[i]["先手"]
+        addduelsecond = df.iloc[i]["後手"]
+        addduelwinfirst = df.iloc[i]["先手勝ち"]
+        addduelwinsecond = df.iloc[i]["後手勝ち"]
+        sumfirst += addduelfirst
+        sumsecond += addduelsecond
+        sumfirstwin += addduelwinfirst
+        sumsecondwin += addduelwinsecond
+        sumduel += addduelfirst + addduelsecond
+        duelwin += addduelwinfirst + addduelwinsecond
+    winrate = None
+    winratefirst = None
+    winratesecond = None
+    if sumduel != 0:
+        winrate = round(duelwin/sumduel,3)
+    if sumfirst != 0:
+        winratefirst = round(sumfirstwin/sumfirst,3)
+    if sumsecond != 0:
+        winratesecond = round(sumsecondwin/sumsecond,3)
+    dfad = pd.DataFrame({
+        "総対戦数":sumduel,
+        "全体勝率":winrate,
+        "総勝ち数":duelwin,
+        "総負け数":(sumduel-duelwin),
+        "総先手数":sumfirst,
+        "総後手数":sumsecond,
+        "先手勝率":winratefirst,
+        "後手勝率":winratesecond
+    },index=["{}現在".format(today)])
+    return dfad
 
        
 # ページレイアウト
@@ -188,7 +227,7 @@ deck_options = st.session_state.decks
 st.title("DC 戦績記入,分析ツール")
 
 # デッキ情報の取り出し　記入モジュール
-newdeck = st.text_input("新しいデッキの追加")
+newdeck = st.text_input("新しいデッキの追加 変なデッキを追加したら、戦績記入の前にリロードすること")
 if st.button("追加"):
     apd = 0
     for i in st.session_state.decks:
@@ -221,9 +260,23 @@ if submit is True:
         dueldatas_master.save("database_florting/dueldatas.xlsx")
         st.button("データの同期") 
         
-    
+st.markdown("#### 対戦デッキ別データ")    
 if datalist == []:
     st.write("データがありません。")
+    today = datetime.datetime.now()
+    today ="{}/{}/{}".format(today.year,today.month,today.day)
+    df = pd.DataFrame({
+    "デッキ":"",
+    "対戦数":0,
+    "先手":0,
+    "後手":0,
+    "先手勝ち":0,
+    "先手負け":0,
+    "後手勝ち":0,
+    "後手負け":0,
+    "先手勝率":0,
+    "後手勝率":0
+    },index=[today])
 else:
     df = pd.concat(datalist)
     pytoadditionaldata(df,dueldatas)
@@ -231,11 +284,16 @@ else:
     st.write(df)
     st.button("勝率を計算")
 
-st.markdown("### 危険　全データの初期化")
+st.markdown("#### 全体データ")
+dfad = advanceddata(df)
+st.write(dfad)
 
+st.markdown("### 危険　全データの初期化")
+st.write("仕様上,600種以上のデッキデータがある場合はexcelファイルから直接消去してください。")
+st.write("その際はインデックス（見出し）まで消さないように")
 check = st.checkbox("初期化しますか？")
 check2 = st.checkbox("こうかいしませんね？")
-if st.button("このボタンでデータが初期化") and check and check2:
+if st.button("上の2つのチェック+このボタンでデータが初期化") and check and check2:
     datas_init(dueldatas_master)
     dueldatas_master.save("database_florting/dueldatas.xlsx")
     st.write("データを初期化しました。　リロードすると反映されます")
