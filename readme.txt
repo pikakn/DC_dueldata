@@ -13,7 +13,7 @@ pythonと、エディタであるvisual studio code のDLから始めるのを�
 残りの3つはpipというコマンドでdlできます(具体的な記述は調べていただけると出ます。)
 
 ＜使い方＞
-ファイル「dc集計ツール」をDLします
+ファイル「dc集計ツール」をDLします(右上のcodeからdownload.zipをクリックすると、DC_dueldata main という名前でdlされるようです)
 powershell等のターミナル（コマンドプロンプトでも動きます）に、streamlit run gatherdueldata.pyと入力します。
 この際、ターミナルが「dc集計ツール」上で動いていることを確認してください。
 心配な人は、ターミナルに「cd "「dc集計ツール」をDLした場所（ファイルパス）"」と打ち込んだのち実行してください
