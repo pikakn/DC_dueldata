@@ -17,7 +17,7 @@ def datastopy(path):
         datefront = dueldatas.cell(row=i,column=1).value
         decks.append(dueldatas.cell(row=i,column=2).value)
         duel = []
-        for j in range(2,12):
+        for j in range(2,15):
             duel.append(dueldatas.cell(row=i,column=j).value)
         dfduel = pd.DataFrame({
             "デッキ":duel[0],
@@ -29,7 +29,10 @@ def datastopy(path):
             "後手勝ち":duel[6],
             "後手負け":duel[7],
             "先手勝率":duel[8],
-            "後手勝率":duel[9]
+            "後手勝率":duel[9],
+            "勝ち":duel[10],
+            "負け":duel[11],
+            "勝率":duel[12]
         },index=[datefront])
         datas.append(dfduel)
         i += 1   
@@ -141,6 +144,8 @@ def pytoadditionaldata(df,dueldatas):
         firstwin = df.iloc[i]["先手勝ち"]
         second = df.iloc[i]["後手"]
         secondwin = df.iloc[i]["後手勝ち"]
+        general = df.iloc[i]["対戦数"]
+        generalwin = firstwin + secondwin
         if first != 0:
             rate_firstwin = round(firstwin/first,3)
             dueldatas.cell(row=i+7,column=10,value=rate_firstwin)
@@ -149,6 +154,15 @@ def pytoadditionaldata(df,dueldatas):
             rate_secondwin = round(secondwin/second,3)
             dueldatas.cell(row=i+7,column=11,value=rate_secondwin)
             df.iat[i,9] = rate_secondwin
+        if general != 0:
+            rate_general = round(generalwin/general,3)
+            dueldatas.cell(row=i+7,column=12,value=generalwin)
+            dueldatas.cell(row=i+7,column=13,value=general-generalwin)
+            dueldatas.cell(row=i+7,column=14,value=rate_general)
+            df.iat[i,10] = generalwin
+            df.iat[i,11] = general-generalwin            
+            df.iat[i,12] = rate_general
+
 
 def datas_init(dueldatas_master):
     dueldatas = dueldatas_master["シート1"]
@@ -268,6 +282,7 @@ if datalist == []:
     df = pd.DataFrame({
     "デッキ":"",
     "対戦数":0,
+    "勝率":0,
     "先手":0,
     "後手":0,
     "先手勝ち":0,
@@ -296,8 +311,6 @@ if st.button("上の2つのチェック+このボタンでデータが初期化"
     datas_init(dueldatas_master)
     dueldatas_master.save("database_florting/dueldatas.xlsx")
     st.write("データを初期化しました。　リロードすると反映されます")
-
-    
    
     
 
