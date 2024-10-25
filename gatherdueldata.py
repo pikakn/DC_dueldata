@@ -30,11 +30,11 @@ def datastopy(path):
                 "先手負け": duel[5],
                 "後手勝ち": duel[6],
                 "後手負け": duel[7],
-                "先手勝率": duel[8],
-                "後手勝率": duel[9],
+                "先手勝率": pd.Series(duel[8], dtype=float),
+                "後手勝率": pd.Series(duel[9], dtype=float),
                 "勝ち": duel[10],
                 "負け": duel[11],
-                "勝率": duel[12],
+                "勝率": pd.Series(duel[12], dtype=float),
             },
             index=[datefront],
         )
@@ -308,7 +308,9 @@ if datalist == []:
         index=[today],
     )
 else:
-    df = pd.concat(datalist)
+    df = pd.concat(
+        datalist
+    )  # ここについてエラーを吐かれる（空のデータフレームをconcatできません）が、そのような場合は条件分岐ではじいている
     pytoadditionaldata(df, dueldatas)
     dueldatas_master.save("database_florting/dueldatas.xlsx")
     st.write(df)
