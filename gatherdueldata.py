@@ -6,7 +6,17 @@ import datetime
 # データを読み込み、worksheet型と1次元dfのリストにする デッキリストだけは別でリストに
 
 
-def datastopy(path):
+def datas_topy(path: str):
+    """データベース(excel)からデータを読み込む
+    デッキの情報だけは個別でリストにしている
+    Args:
+        path(str):excelのファイルパス
+    Returns:
+        openpyxl.workbook:読み込み、保存のキー
+
+        list:戦績データを1次元dfのリストで取得　dfに加工後python内での編集に用いる
+
+        list:デッキのデータをリストで取得"""
     dueldatas_master = ox.load_workbook(path)
     dueldatas = dueldatas_master["シート1"]
     datas = []
@@ -43,7 +53,20 @@ def datastopy(path):
     return dueldatas_master, datas, decks
 
 
-def pytodatas(dueldatas_master, deck, order, result):
+def py_todatas(dueldatas_master, deck, order, result):
+    """戦績データ(deck,order,result)をexcelに入力
+
+    excelファイルのセーブはこの関数に含まれないので注意
+
+    ファイルのリロード（勝手に行われる）で出力
+    Args:
+        dueldatas_master(openpyxl.workbook): データを保存するexcelファイルの指定
+
+        deck,order,result(str): それぞれ入力された戦績データ
+
+    Returns:
+        (なし)
+    """
     import datetime
 
     dueldatas = dueldatas_master["シート1"]
@@ -141,7 +164,16 @@ def pytodatas(dueldatas_master, deck, order, result):
             dueldatas.cell(row=i, column=9, value=1)
 
 
-def pytoadditionaldata(df, dueldatas):
+def py_toadditionaldata(df, dueldatas):
+    """基礎的なデータをもとに、デッキ別データを算出
+    表示用のdfとexcelに同時に入力(リロードがわずらわしいので)
+    Args:
+        df(dataframe): データの表示に使っているデータフレーム
+
+        dueldatas(worksheet): データを入力するシート
+    Returns:
+        (なし)
+    """
     for i in range(len(df)):
         first = df.iloc[i]["先手"]
         firstwin = df.iloc[i]["先手勝ち"]
@@ -168,6 +200,12 @@ def pytoadditionaldata(df, dueldatas):
 
 
 def datas_init(dueldatas_master):
+    """データベース(excelデータ)の初期化関数
+    600行までしか消せない(他意はない)
+    Args:
+        dueldatas_master(Workbook): 初期化するexcelファイル
+    Returns:
+        (なし)"""
     dueldatas = dueldatas_master["シート1"]
     for row in dueldatas.iter_rows(min_row=7, min_col=1, max_row=600, max_col=11):
         for cell in row:
@@ -175,6 +213,14 @@ def datas_init(dueldatas_master):
 
 
 def advanceddata(df):
+    """表示用データ(df)をもとに、全体のデータを作成し、新しいdf(dfad)を返す
+
+    excelの操作は含まない
+    Args:
+        df(dataframe): 表示用デッキ別データ
+    Returns:
+        dfad(dataframe): 表示用全体データ
+    """
     import datetime
 
     today = datetime.datetime.now()
@@ -231,7 +277,7 @@ st.set_page_config(
 )
 
 # 対戦データの読み込み、デッキ表示
-dueldatas_master, datalist, deckdueled = datastopy("database_florting/dueldatas.xlsx")
+dueldatas_master, datalist, deckdueled = datas_topy("database_florting/dueldatas.xlsx")
 dueldatas = dueldatas_master["シート1"]
 
 # 　表示の調整　重複するデッキをはじいている
@@ -282,7 +328,7 @@ if submit is True:
     if deck == reject:
         st.write("無効なデッキ名です")
     else:
-        pytodatas(dueldatas_master, deck, order, result)
+        py_todatas(dueldatas_master, deck, order, result)
         dueldatas_master.save("database_florting/dueldatas.xlsx")
         st.button("データの同期")
 
@@ -308,10 +354,8 @@ if datalist == []:
         index=[today],
     )
 else:
-    df = pd.concat(
-        datalist
-    )  # ここについてエラーを吐かれる（空のデータフレームをconcatできません）が、そのような場合は条件分岐ではじいている
-    pytoadditionaldata(df, dueldatas)
+    df = pd.concat(datalist)
+    py_toadditionaldata(df, dueldatas)
     dueldatas_master.save("database_florting/dueldatas.xlsx")
     st.write(df)
 
