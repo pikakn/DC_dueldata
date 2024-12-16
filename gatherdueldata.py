@@ -26,7 +26,9 @@ def datas_topy(path: str):
         if dueldatas.cell(row=i, column=1).value is None:
             break
         datefront = dueldatas.cell(row=i, column=1).value
-        decks.append(dueldatas.cell(row=i, column=2).value)
+        deckCheck = dueldatas.cell(row=i, column=2).value
+        if not deckCheck.startswith("!!"):
+            decks.append(deckCheck)
         duel = []
         for j in range(2, 15):
             duel.append(dueldatas.cell(row=i, column=j).value)
@@ -53,6 +55,39 @@ def datas_topy(path: str):
     return dueldatas_master, datas, decks
 
 
+def datas_topy_gather(datas):
+    df = []
+    for i in range(len(datas)):
+        datapicked = datas[i]
+        pickedDeck = datas[i].iat[0, 0]
+        pickedDate = datas[i].index[0]
+        pickedDate = pickedDate.split("/")
+        pickedDate = "{}/{}/{}".format(pickedDate[0], pickedDate[1], pickedDate[2])
+        datapicked.index = [pickedDate]
+        cal = 1
+        j = 0
+        while True:
+            if j >= len(df):
+                cal = 0
+                break
+            deck = df[j].iat[0, 0]
+            date = df[j].index[0].split("/")
+            date = "{}/{}/{}".format(date[0], date[1], date[2])
+            if (
+                date == pickedDate
+                and deck == pickedDeck
+                and not pickedDeck.startswith("!!")
+            ):
+                for k in range(1, 8):
+                    df[j].iat[0, k] += datapicked.iat[0, k]
+                break
+
+            j += 1
+        if cal == 0 and not pickedDeck.startswith("!!"):
+            df.append(datapicked)
+    return df
+
+
 def py_todatas(dueldatas_master, deck, order, result):
     """戦績データ(deck,order,result)をexcelに入力
 
@@ -71,9 +106,13 @@ def py_todatas(dueldatas_master, deck, order, result):
 
     dueldatas = dueldatas_master["シート1"]
     datefront = datetime.datetime.now()
-    datefront = "{}/{}/{}".format(datefront.year, datefront.month, datefront.day)
+    time = datefront.time().hour
+    datefront = "{}/{}/{}/{}時".format(
+        datefront.year, datefront.month, datefront.day, time
+    )
     i = 7
     cal = 1
+    dueledSoFar = None
     while True:
         dueldate = dueldatas.cell(row=i, column=1).value
         deckdataed = dueldatas.cell(row=i, column=2).value
@@ -89,7 +128,6 @@ def py_todatas(dueldatas_master, deck, order, result):
                 dueldatas.cell(row=i, column=4, value=changepoint + 1)
                 changepoint = int(dueldatas.cell(row=i, column=6).value)
                 dueldatas.cell(row=i, column=6, value=changepoint + 1)
-                break
             elif order == "後手" and result == "勝ち":
                 dueldatas.cell(row=i, column=1, value=datefront)
                 changepoint = int(dueldatas.cell(row=i, column=3).value)
@@ -98,7 +136,6 @@ def py_todatas(dueldatas_master, deck, order, result):
                 dueldatas.cell(row=i, column=5, value=changepoint + 1)
                 changepoint = int(dueldatas.cell(row=i, column=8).value)
                 dueldatas.cell(row=i, column=8, value=changepoint + 1)
-                break
             elif order == "先手" and result == "負け":
                 dueldatas.cell(row=i, column=1, value=datefront)
                 changepoint = int(dueldatas.cell(row=i, column=3).value)
@@ -107,7 +144,6 @@ def py_todatas(dueldatas_master, deck, order, result):
                 dueldatas.cell(row=i, column=4, value=changepoint + 1)
                 changepoint = int(dueldatas.cell(row=i, column=7).value)
                 dueldatas.cell(row=i, column=7, value=changepoint + 1)
-                break
             elif order == "後手" and result == "負け":
                 dueldatas.cell(row=i, column=1, value=datefront)
                 changepoint = int(dueldatas.cell(row=i, column=3).value)
@@ -116,9 +152,22 @@ def py_todatas(dueldatas_master, deck, order, result):
                 dueldatas.cell(row=i, column=5, value=changepoint + 1)
                 changepoint = int(dueldatas.cell(row=i, column=9).value)
                 dueldatas.cell(row=i, column=9, value=changepoint + 1)
-                break
+            break
         i += 1
+        dueledSoFar = dueldate
+
     if cal == 0:
+        if dueledSoFar != datefront:
+            dueldatas.cell(row=i, column=1, value=datefront)
+            dueldatas.cell(row=i, column=2, value="!!{}時のデータ".format(time))
+            dueldatas.cell(row=i, column=3, value=0)
+            dueldatas.cell(row=i, column=4, value=0)
+            dueldatas.cell(row=i, column=5, value=0)
+            dueldatas.cell(row=i, column=6, value=0)
+            dueldatas.cell(row=i, column=7, value=0)
+            dueldatas.cell(row=i, column=8, value=0)
+            dueldatas.cell(row=i, column=9, value=0)
+            i += 1
         if order == "先手" and result == "勝ち":
             dueldatas.cell(row=i, column=1, value=datefront)
             dueldatas.cell(row=i, column=2, value=deck)
@@ -194,6 +243,34 @@ def py_toadditionaldata(df, dueldatas):
             dueldatas.cell(row=i + 7, column=12, value=generalwin)
             dueldatas.cell(row=i + 7, column=13, value=general - generalwin)
             dueldatas.cell(row=i + 7, column=14, value=rate_general)
+            df.iat[i, 10] = generalwin
+            df.iat[i, 11] = general - generalwin
+            df.iat[i, 12] = rate_general
+
+
+def py_toadditionaldata2(df):
+    """基礎的なデータをもとに、デッキ別データを算出
+    表示用のdfのみに入力
+    Args:
+        df(dataframe): データの表示に使っているデータフレーム
+    Returns:
+        (なし)
+    """
+    for i in range(len(df)):
+        first = df.iloc[i]["先手"]
+        firstwin = df.iloc[i]["先手勝ち"]
+        second = df.iloc[i]["後手"]
+        secondwin = df.iloc[i]["後手勝ち"]
+        general = df.iloc[i]["対戦数"]
+        generalwin = firstwin + secondwin
+        if first != 0:
+            rate_firstwin = round(firstwin / first, 3)
+            df.iat[i, 8] = rate_firstwin
+        if second != 0:
+            rate_secondwin = round(secondwin / second, 3)
+            df.iat[i, 9] = rate_secondwin
+        if general != 0:
+            rate_general = round(generalwin / general, 3)
             df.iat[i, 10] = generalwin
             df.iat[i, 11] = general - generalwin
             df.iat[i, 12] = rate_general
@@ -333,6 +410,7 @@ if submit is True:
         st.button("データの同期")
 
 st.markdown("#### 対戦デッキ別データ")
+mode = st.radio("", ("1時間ごと", "1日ごと"), horizontal=True)
 if datalist == []:
     st.write("データがありません。")
     today = datetime.datetime.now()
@@ -354,10 +432,16 @@ if datalist == []:
         index=[today],
     )
 else:
-    df = pd.concat(datalist)
-    py_toadditionaldata(df, dueldatas)
-    dueldatas_master.save("database_florting/dueldatas.xlsx")
-    st.write(df)
+    if mode == "1時間ごと":
+        df = pd.concat(datalist)
+        py_toadditionaldata(df, dueldatas)
+        dueldatas_master.save("database_florting/dueldatas.xlsx")
+        st.write(df)
+    else:
+        df = datas_topy_gather(datalist)
+        df = pd.concat(df)
+        py_toadditionaldata2(df)
+        st.write(df)
 
 st.markdown("#### 全体データ")
 dfad = advanceddata(df)
