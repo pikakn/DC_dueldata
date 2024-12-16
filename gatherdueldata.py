@@ -56,6 +56,15 @@ def datas_topy(path: str):
 
 
 def datas_topy_gather(datas):
+    """戦績データを日にちごとに集計したものに変形する
+
+    Args:
+        datas:excelから引っ張ってきたデータそのまま
+        要素1つずつのdfたちを要素とするリスト
+
+    Returns:
+        df:加工されたデータ
+        要素1つずつのdfたちを要素とする"""
     df = []
     for i in range(len(datas)):
         datapicked = datas[i]
