@@ -284,7 +284,7 @@ def datas_init(dueldatas_master):
     Returns:
         (なし)"""
     dueldatas = dueldatas_master["シート1"]
-    for row in dueldatas.iter_rows(min_row=7, min_col=1, max_row=600, max_col=11):
+    for row in dueldatas.iter_rows(min_row=7, min_col=1, max_row=600, max_col=14):
         for cell in row:
             cell.value = None
 
@@ -410,7 +410,7 @@ if submit is True:
         st.button("データの同期")
 
 st.markdown("#### 対戦デッキ別データ")
-mode = st.radio("", ("1時間ごと", "1日ごと"), horizontal=True)
+mode = st.radio("表示モードを指定", ("1時間ごと", "1日ごと"), horizontal=True)
 if datalist == []:
     st.write("データがありません。")
     today = datetime.datetime.now()
