@@ -167,8 +167,8 @@ def py_todatas(dueldatas_master, deck, order, result):
 
     if cal == 0:
         if dueledSoFar != datefront:
-            valueList = [datefront, "!!{}時のデータ".format(time), 0, 0, 0, 0, 0, 0, 0]
-            for j in range(9):
+            valueList = [datefront, "!!{}時のデータ".format(time)]
+            for j in range(2):
                 dueldatas.cell(row=i, column=j + 1, value=valueList[j])
             i += 1
 
@@ -200,6 +200,8 @@ def py_toadditionaldata(df, dueldatas):
         second = df.iloc[i]["後手"]
         secondwin = df.iloc[i]["後手勝ち"]
         general = df.iloc[i]["対戦数"]
+        if first == None and second == None:
+            continue
         generalwin = firstwin + secondwin
         if first != 0:
             rate_firstwin = round(firstwin / first, 3)
@@ -233,6 +235,8 @@ def py_toadditionaldata2(df):
         second = df.iloc[i]["後手"]
         secondwin = df.iloc[i]["後手勝ち"]
         general = df.iloc[i]["対戦数"]
+        if first == None and second == None:
+            continue
         generalwin = firstwin + secondwin
         if first != 0:
             rate_firstwin = round(firstwin / first, 3)
@@ -284,6 +288,8 @@ def advanceddata(df):
         addduelsecond = df.iloc[i]["後手"]
         addduelwinfirst = df.iloc[i]["先手勝ち"]
         addduelwinsecond = df.iloc[i]["後手勝ち"]
+        if addduelfirst == None and addduelsecond == None:
+            continue
         sumfirst += addduelfirst
         sumsecond += addduelsecond
         sumfirstwin += addduelwinfirst
