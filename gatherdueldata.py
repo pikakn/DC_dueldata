@@ -97,6 +97,25 @@ def datas_topy_gather(datas):
     return df
 
 
+def py_plusEqual(data, i, col, plus):
+    """openpyelにおける、いわゆる+=の実装
+    演算対象は整数に限る
+
+    Args:
+        data(openpyxl_workbook):データを入力するexcelシート
+
+        i(int):入力するセルのrow
+
+        col(int):入力するセルのcolumn
+
+        plus(int):足す数
+
+    Returns:
+        (なし)"""
+    changePoint = int(data.cell(row=i, column=col).value)
+    data.cell(row=i, column=col, value=changePoint + plus)
+
+
 def py_todatas(dueldatas_master, deck, order, result):
     """戦績データ(deck,order,result)をexcelに入力
 
@@ -129,97 +148,40 @@ def py_todatas(dueldatas_master, deck, order, result):
             cal = 0
             break
         if dueldate == datefront and deckdataed == deck:
-            if order == "先手" and result == "勝ち":
-                dueldatas.cell(row=i, column=1, value=datefront)
-                changepoint = int(dueldatas.cell(row=i, column=3).value)
-                dueldatas.cell(row=i, column=3, value=changepoint + 1)
-                changepoint = int(dueldatas.cell(row=i, column=4).value)
-                dueldatas.cell(row=i, column=4, value=changepoint + 1)
-                changepoint = int(dueldatas.cell(row=i, column=6).value)
-                dueldatas.cell(row=i, column=6, value=changepoint + 1)
-            elif order == "後手" and result == "勝ち":
-                dueldatas.cell(row=i, column=1, value=datefront)
-                changepoint = int(dueldatas.cell(row=i, column=3).value)
-                dueldatas.cell(row=i, column=3, value=changepoint + 1)
-                changepoint = int(dueldatas.cell(row=i, column=5).value)
-                dueldatas.cell(row=i, column=5, value=changepoint + 1)
-                changepoint = int(dueldatas.cell(row=i, column=8).value)
-                dueldatas.cell(row=i, column=8, value=changepoint + 1)
-            elif order == "先手" and result == "負け":
-                dueldatas.cell(row=i, column=1, value=datefront)
-                changepoint = int(dueldatas.cell(row=i, column=3).value)
-                dueldatas.cell(row=i, column=3, value=changepoint + 1)
-                changepoint = int(dueldatas.cell(row=i, column=4).value)
-                dueldatas.cell(row=i, column=4, value=changepoint + 1)
-                changepoint = int(dueldatas.cell(row=i, column=7).value)
-                dueldatas.cell(row=i, column=7, value=changepoint + 1)
-            elif order == "後手" and result == "負け":
-                dueldatas.cell(row=i, column=1, value=datefront)
-                changepoint = int(dueldatas.cell(row=i, column=3).value)
-                dueldatas.cell(row=i, column=3, value=changepoint + 1)
-                changepoint = int(dueldatas.cell(row=i, column=5).value)
-                dueldatas.cell(row=i, column=5, value=changepoint + 1)
-                changepoint = int(dueldatas.cell(row=i, column=9).value)
-                dueldatas.cell(row=i, column=9, value=changepoint + 1)
+            dueldatas.cell(row=i, column=1, value=datefront)
+            py_plusEqual(dueldatas, i, 3, 1)
+
+            point_update = {
+                ("先手", "勝ち"): (4, 6),
+                ("先手", "負け"): (4, 7),
+                ("後手", "勝ち"): (5, 8),
+                ("後手", "負け"): (5, 9),
+            }
+
+            j, k = point_update[(order, result)]
+            py_plusEqual(dueldatas, i, j, 1)
+            py_plusEqual(dueldatas, i, k, 1)
             break
         i += 1
         dueledSoFar = dueldate
 
     if cal == 0:
         if dueledSoFar != datefront:
-            dueldatas.cell(row=i, column=1, value=datefront)
-            dueldatas.cell(row=i, column=2, value="!!{}時のデータ".format(time))
-            dueldatas.cell(row=i, column=3, value=0)
-            dueldatas.cell(row=i, column=4, value=0)
-            dueldatas.cell(row=i, column=5, value=0)
-            dueldatas.cell(row=i, column=6, value=0)
-            dueldatas.cell(row=i, column=7, value=0)
-            dueldatas.cell(row=i, column=8, value=0)
-            dueldatas.cell(row=i, column=9, value=0)
+            valueList = [datefront, "!!{}時のデータ".format(time), 0, 0, 0, 0, 0, 0, 0]
+            for j in range(9):
+                dueldatas.cell(row=i, column=j + 1, value=valueList[j])
             i += 1
-        if order == "先手" and result == "勝ち":
-            dueldatas.cell(row=i, column=1, value=datefront)
-            dueldatas.cell(row=i, column=2, value=deck)
-            dueldatas.cell(row=i, column=3, value=1)
-            dueldatas.cell(row=i, column=4, value=1)
-            dueldatas.cell(row=i, column=5, value=0)
-            dueldatas.cell(row=i, column=6, value=1)
-            dueldatas.cell(row=i, column=7, value=0)
-            dueldatas.cell(row=i, column=8, value=0)
-            dueldatas.cell(row=i, column=9, value=0)
 
-        elif order == "後手" and result == "勝ち":
-            dueldatas.cell(row=i, column=1, value=datefront)
-            dueldatas.cell(row=i, column=2, value=deck)
-            dueldatas.cell(row=i, column=3, value=1)
-            dueldatas.cell(row=i, column=4, value=0)
-            dueldatas.cell(row=i, column=5, value=1)
-            dueldatas.cell(row=i, column=6, value=0)
-            dueldatas.cell(row=i, column=7, value=0)
-            dueldatas.cell(row=i, column=8, value=1)
-            dueldatas.cell(row=i, column=9, value=0)
+        valueLists = {
+            ("先手", "勝ち"): [datefront, deck, 1, 1, 0, 1, 0, 0, 0],
+            ("先手", "負け"): [datefront, deck, 1, 1, 0, 0, 1, 0, 0],
+            ("後手", "勝ち"): [datefront, deck, 1, 0, 1, 0, 0, 1, 0],
+            ("後手", "負け"): [datefront, deck, 1, 0, 1, 0, 0, 0, 1],
+        }
 
-        elif order == "先手" and result == "負け":
-            dueldatas.cell(row=i, column=1, value=datefront)
-            dueldatas.cell(row=i, column=2, value=deck)
-            dueldatas.cell(row=i, column=3, value=1)
-            dueldatas.cell(row=i, column=4, value=1)
-            dueldatas.cell(row=i, column=5, value=0)
-            dueldatas.cell(row=i, column=6, value=0)
-            dueldatas.cell(row=i, column=7, value=1)
-            dueldatas.cell(row=i, column=8, value=0)
-            dueldatas.cell(row=i, column=9, value=0)
-
-        elif order == "後手" and result == "負け":
-            dueldatas.cell(row=i, column=1, value=datefront)
-            dueldatas.cell(row=i, column=2, value=deck)
-            dueldatas.cell(row=i, column=3, value=1)
-            dueldatas.cell(row=i, column=4, value=0)
-            dueldatas.cell(row=i, column=5, value=1)
-            dueldatas.cell(row=i, column=6, value=0)
-            dueldatas.cell(row=i, column=7, value=0)
-            dueldatas.cell(row=i, column=8, value=0)
-            dueldatas.cell(row=i, column=9, value=1)
+        values_for_result = valueLists[(order, result)]
+        for j in range(9):
+            dueldatas.cell(row=i, column=j + 1, value=values_for_result[j])
 
 
 def py_toadditionaldata(df, dueldatas):
