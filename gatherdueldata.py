@@ -66,6 +66,7 @@ def datas_topy_gather(datas):
         df:加工されたデータ
         要素1つずつのdfたちを要素とする"""
     df = []
+    dateSoFar = None
     for i in range(len(datas)):
         datapicked = datas[i]
         pickedDeck = datas[i].iat[0, 0]
@@ -90,10 +91,32 @@ def datas_topy_gather(datas):
                 for k in range(1, 8):
                     df[j].iat[0, k] += datapicked.iat[0, k]
                 break
-
             j += 1
+
+        if cal == 0 and pickedDate != dateSoFar:
+            dfReciept = pd.DataFrame(
+                {
+                    "デッキ": "!!{}のデータ".format(pickedDate),
+                    "対戦数": None,
+                    "先手": None,
+                    "後手": None,
+                    "先手勝ち": None,
+                    "先手負け": None,
+                    "後手勝ち": None,
+                    "後手負け": None,
+                    "先手勝率": None,
+                    "後手勝率": None,
+                    "勝ち": None,
+                    "負け": None,
+                    "勝率": None,
+                },
+                index=[pickedDate],
+            )
+            df.append(dfReciept)
+            dateSoFar = pickedDate
         if cal == 0 and not pickedDeck.startswith("!!"):
             df.append(datapicked)
+            dateSoFar = pickedDate
     return df
 
 
