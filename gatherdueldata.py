@@ -91,6 +91,7 @@ def datas_topy_gather(datas):
                 for k in range(1, 8):
                     df[j].iat[0, k] += datapicked.iat[0, k]
                 break
+
             j += 1
 
         if cal == 0 and pickedDate != dateSoFar:
@@ -121,7 +122,7 @@ def datas_topy_gather(datas):
 
 
 def py_plusEqual(data, i, col, plus):
-    """openpyelにおける、いわゆる+=の実装
+    """openpyxlにおける、いわゆる+=の実装
     演算対象は整数に限る
 
     Args:
@@ -287,6 +288,32 @@ def datas_init(dueldatas_master):
             cell.value = None
 
 
+def generate_df(day, sumfirst, sumfirstwin, sumsecond, sumsecondwin, sumduel, duelwin):
+    winrate = None
+    winratefirst = None
+    winratesecond = None
+    if sumduel != 0:
+        winrate = round(duelwin / sumduel, 3)
+    if sumfirst != 0:
+        winratefirst = round(sumfirstwin / sumfirst, 3)
+    if sumsecond != 0:
+        winratesecond = round(sumsecondwin / sumsecond, 3)
+    df = pd.DataFrame(
+        {
+            "総対戦数": sumduel,
+            "全体勝率": winrate,
+            "総勝ち数": duelwin,
+            "総負け数": (sumduel - duelwin),
+            "総先手数": sumfirst,
+            "総後手数": sumsecond,
+            "先手勝率": winratefirst,
+            "後手勝率": winratesecond,
+        },
+        index=["{}のデータ".format(day)],
+    )
+    return df
+
+
 def advanceddata(df):
     """表示用データ(df)をもとに、全体のデータを作成し、新しいdf(dfad)を返す
 
@@ -319,29 +346,77 @@ def advanceddata(df):
         sumsecondwin += addduelwinsecond
         sumduel += addduelfirst + addduelsecond
         duelwin += addduelwinfirst + addduelwinsecond
-    winrate = None
-    winratefirst = None
-    winratesecond = None
-    if sumduel != 0:
-        winrate = round(duelwin / sumduel, 3)
-    if sumfirst != 0:
-        winratefirst = round(sumfirstwin / sumfirst, 3)
-    if sumsecond != 0:
-        winratesecond = round(sumsecondwin / sumsecond, 3)
-    dfad = pd.DataFrame(
-        {
-            "総対戦数": sumduel,
-            "全体勝率": winrate,
-            "総勝ち数": duelwin,
-            "総負け数": (sumduel - duelwin),
-            "総先手数": sumfirst,
-            "総後手数": sumsecond,
-            "先手勝率": winratefirst,
-            "後手勝率": winratesecond,
-        },
-        index=["{}現在".format(today)],
+    dfad = generate_df(
+        today, sumfirst, sumfirstwin, sumsecond, sumsecondwin, sumduel, duelwin
     )
     return dfad
+
+
+def advanceddata_perday(df):
+    """表示用データ(df)をもとに、一日ごとのデータを作成し、新しいdf(dfad)を返す
+
+    excelの操作は含まない
+    Args:
+        df(dataframe): 表示用デッキ別データ
+    Returns:
+        dfad(dataframe): 表示用全体データ
+    """
+    submitData = []
+    sumfirst = 0
+    sumfirstwin = 0
+    sumsecond = 0
+    sumsecondwin = 0
+    sumduel = 0
+    duelwin = 0
+
+    i = 0
+    df_perday = df.index[0]
+    while True:
+        if i + 1 > len(df.index):
+            dfad = generate_df(
+                df_perday,
+                sumfirst,
+                sumfirstwin,
+                sumsecond,
+                sumsecondwin,
+                sumduel,
+                duelwin,
+            )
+            submitData.append(dfad.copy())
+            break
+        addduelfirst = df.iloc[i]["先手"]
+        addduelsecond = df.iloc[i]["後手"]
+        addduelwinfirst = df.iloc[i]["先手勝ち"]
+        addduelwinsecond = df.iloc[i]["後手勝ち"]
+        if df.index[i] != df_perday:
+            dfad = generate_df(
+                df_perday,
+                sumfirst,
+                sumfirstwin,
+                sumsecond,
+                sumsecondwin,
+                sumduel,
+                duelwin,
+            )
+            submitData.append(dfad.copy())
+            df_perday = df.index[i]
+            sumfirst = 0
+            sumfirstwin = 0
+            sumsecond = 0
+            sumsecondwin = 0
+            sumduel = 0
+            duelwin = 0
+        if addduelfirst == None and addduelsecond == None:
+            i += 1
+            continue
+        sumfirst += addduelfirst
+        sumsecond += addduelsecond
+        sumfirstwin += addduelwinfirst
+        sumsecondwin += addduelwinsecond
+        sumduel += addduelfirst + addduelsecond
+        duelwin += addduelwinfirst + addduelwinsecond
+        i += 1
+    return submitData
 
 
 # ページレイアウト
@@ -446,6 +521,11 @@ else:
 st.markdown("#### 全体データ")
 dfad = advanceddata(df)
 st.write(dfad)
+
+st.markdown("#### 1時間ごと/1日ごとの結果")
+dfad2 = advanceddata_perday(df)
+for i in range(len(dfad2)):
+    st.write(dfad2[i])
 
 st.markdown("### 危険　全データの初期化")
 st.write(
